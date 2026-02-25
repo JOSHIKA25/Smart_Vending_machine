@@ -1,34 +1,82 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-import ProductList from "./ProductList";
-import Transactions from "./Transactions"; // ✅ ADD THIS
-import AdminDashboard from "./AdminDashboard";
+import React, { useState } from "react";
+import { ThemeProvider, CssBaseline } from "@mui/material";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { getTheme } from "./theme";
+import Home from "./pages/user/Home";
+import Login from "./pages/user/Login";
+
+// ADMIN
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminTransactions from "./pages/admin/Transactions";
+
+// USER
+import ProductList from "./pages/user/Products";
+import Payment from "./pages/user/Payment";
+
+import Sidebar from "./components/Sidebar";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
-  const [products, setProducts] = useState([]);
-
-  const fetchProducts = async () => {
-    const res = await axios.get("http://localhost:5000/products");
-    setProducts(res.data);
-  };
-
-  useEffect(() => {
-    fetchProducts();
-  }, []);
+  const [darkMode, setDarkMode] = useState(false);
 
   return (
-    <div>
-      <h1>Vending Machine Products</h1>
+    <ThemeProvider theme={getTheme(darkMode ? "dark" : "light")}>
+      <CssBaseline />
+      <Router>
+        <Routes>
+          
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<Home />} />
 
-      {/* Products */}
-      <ProductList products={products} refresh={fetchProducts} />
+          {/* ADMIN ROUTES */}
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedRoute role="admin">
+                <Sidebar toggleTheme={() => setDarkMode(!darkMode)}>
+                  <AdminDashboard />
+                </Sidebar>
+              </ProtectedRoute>
+            }
+          />
 
-      <hr />
+          <Route
+            path="/admin/transactions"
+            element={
+              <ProtectedRoute role="admin">
+                <Sidebar toggleTheme={() => setDarkMode(!darkMode)}>
+                  <AdminTransactions />
+                </Sidebar>
+              </ProtectedRoute>
+            }
+          />
 
-      {/* Transactions */}
-      <Transactions />   {/* ✅ ADD THIS */}
-      <AdminDashboard />
-    </div>
+          {/* USER ROUTES */}
+          <Route
+            path="/user/products"
+            element={
+              <ProtectedRoute role="user">
+                <Sidebar toggleTheme={() => setDarkMode(!darkMode)}>
+                  <ProductList />
+                </Sidebar>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/user/payment"
+            element={
+              <ProtectedRoute role="user">
+                <Sidebar toggleTheme={() => setDarkMode(!darkMode)}>
+                  <Payment />
+                </Sidebar>
+              </ProtectedRoute>
+            }
+          />
+
+        </Routes>
+      </Router>
+    </ThemeProvider>
   );
 }
 
